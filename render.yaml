@@ -1,0 +1,37 @@
+# Render Blueprint: one free web service that serves both the API and the React app.
+# The database is external (Neon Postgres, free tier) — paste its URL when prompted.
+services:
+  - type: web
+    name: seva
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_PHONES
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OTP_SECRET
+        generateValue: true
+      # 256-bit random, base64 — exactly what AES-256-GCM needs.
+      # Never regenerate it: IDs encrypted with the old key become unreadable.
+      - key: ID_ENCRYPTION_KEY
+        generateValue: true
+      - key: DEMO_MODE
+        value: "true"
+      - key: SEED_DEMO_DATA
+        value: "true"
+      - key: OTP_DEV_MODE
+        value: "false"
+      - key: BOOKING_FEE_RUPEES
+        value: "49"

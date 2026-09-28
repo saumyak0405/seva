@@ -10,6 +10,7 @@ import { HttpError, badRequest, notFound } from '../lib/errors.js';
 import { phoneSchema } from '../lib/validation.js';
 import { currentUser, requireAuth, signToken } from '../middleware/auth.js';
 import { notifier } from '../services/notifications.js';
+import { mayRevealOtp } from '../lib/otp-policy.js';
 
 const OTP_TTL_MS = 5 * 60_000;
 const OTP_MAX_ATTEMPTS = 5;
@@ -49,7 +50,8 @@ authRouter.post('/otp/request', async (req, res) => {
   await db.insert(otpCodes).values({ phone, codeHash: hashOtp(phone, code), expiresAt: new Date(now + OTP_TTL_MS) });
   await notifier.sendOtp(phone, code);
 
-  res.json({ sent: true, expiresInSeconds: OTP_TTL_MS / 1000, ...(env.OTP_DEV_MODE ? { devCode: code } : {}) });
+  const reveal = mayRevealOtp({ devMode: env.OTP_DEV_MODE, demoMode: env.DEMO_MODE, isAdminPhone: env.ADMIN_PHONES.includes(phone) });
+  res.json({ sent: true, expiresInSeconds: OTP_TTL_MS / 1000, ...(reveal ? { devCode: code } : {}) });
 });
 
 authRouter.post('/otp/verify', async (req, res) => {

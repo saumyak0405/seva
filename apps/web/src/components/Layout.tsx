@@ -1,5 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../lib/auth';
+import { api } from '../lib/api';
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-md px-3 py-1.5 text-sm font-medium ${isActive ? 'bg-brand-50 text-brand-800' : 'text-stone-600 hover:text-stone-900'}`;
@@ -8,8 +10,19 @@ export function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const config = useQuery({
+    queryKey: ['config'],
+    queryFn: () => api<{ demoMode: boolean }>('/config'),
+    staleTime: Infinity,
+  });
+
   return (
     <div className="flex min-h-screen flex-col">
+      {config.data?.demoMode && (
+        <div className="bg-amber-400 px-4 py-1.5 text-center text-sm text-stone-900">
+          <strong>Demo site:</strong> workers are fictional and no one will visit. Log in with any mobile number — the OTP is shown on screen.
+        </div>
+      )}
       <header className="sticky top-0 z-10 border-b border-stone-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
           <Link to="/" className="flex items-center gap-2 font-semibold text-brand-800">

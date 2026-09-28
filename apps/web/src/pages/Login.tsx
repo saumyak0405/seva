@@ -84,7 +84,7 @@ export function LoginPage() {
             />
             {sent.devCode && (
               <p className="mt-2 rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-800">
-                Dev mode: your code is <strong>{sent.devCode}</strong>
+                Demo — no SMS is sent. Your code is <strong>{sent.devCode}</strong>
               </p>
             )}
             <button

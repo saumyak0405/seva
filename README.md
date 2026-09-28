@@ -52,7 +52,7 @@ apps/
       routes/                auth, workers, bookings, admin
       lib/crypto.ts          AES-256-GCM ID encryption, HMAC OTP hashing
     db/migrations/           SQL migrations (incl. exclusion constraint)
-    test/                    49 unit + integration tests
+    test/                    52 unit + integration tests
   web/
     src/pages/               Home, Workers, WorkerDetail, Login, MyBookings, BookingDetail, admin/*
 ```
@@ -116,6 +116,14 @@ npm test          # resets the seva_test database, runs migrations, runs all tes
 npm run typecheck
 ```
 
+## Deployment
+
+The app runs as a **single Render web service**: Express serves the API under `/api` and the built React app for every other route, so there is one URL and no CORS setup. The database is **Neon** serverless Postgres.
+
+- `render.yaml` is a Render Blueprint. It generates `JWT_SECRET`, `OTP_SECRET` and `ID_ENCRYPTION_KEY`, and prompts for `DATABASE_URL` and `ADMIN_PHONES`.
+- On every start the server applies pending migrations. With `SEED_DEMO_DATA=true`, it also loads the demo workers if the database is empty.
+- **Demo mode** (`DEMO_MODE=true`): no SMS provider is connected yet, so the OTP for household logins is shown on screen and a banner marks the site as a demo. **Admin OTPs are never shown.** They only appear in the server logs, so visitors can't log in as staff.
+
 ## API overview
 
 | Method | Path | Who |
@@ -136,7 +144,7 @@ npm run typecheck
 - [ ] Razorpay booking fee (order → checkout → webhook signature verification)
 - [ ] WhatsApp/SMS notifications (swap the `Notifier` implementation)
 - [ ] Real-time booking status with Socket.io
-- [ ] Deploy (API + Postgres on Render/Railway, web on Vercel)
+- [x] Deploy (Render + Neon)
 - [ ] Load test booking endpoint with k6
 - [ ] Hindi UI
 - [ ] Worker ratings after completed bookings

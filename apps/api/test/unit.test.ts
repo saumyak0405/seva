@@ -2,6 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { decryptId, encryptId, hashOtp, safeEqualHex } from '../src/lib/crypto.js';
 import { istDate, istMinuteOfDay, overlaps } from '../src/lib/time.js';
 import { slotsClash } from '../src/services/bookings.js';
+import { mayRevealOtp } from '../src/lib/otp-policy.js';
+
+describe('OTP reveal policy', () => {
+  it('never reveals OTPs in production without demo mode', () => {
+    expect(mayRevealOtp({ devMode: false, demoMode: false, isAdminPhone: false })).toBe(false);
+  });
+  it('reveals household OTPs in demo mode but never admin ones', () => {
+    expect(mayRevealOtp({ devMode: false, demoMode: true, isAdminPhone: false })).toBe(true);
+    expect(mayRevealOtp({ devMode: false, demoMode: true, isAdminPhone: true })).toBe(false);
+  });
+  it('reveals everything in local dev mode', () => {
+    expect(mayRevealOtp({ devMode: true, demoMode: false, isAdminPhone: true })).toBe(true);
+  });
+});
 
 describe('ID encryption', () => {
   it('round-trips and never stores plaintext', () => {

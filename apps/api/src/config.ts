@@ -18,6 +18,16 @@ const EnvSchema = z.object({
     .string()
     .default('false')
     .transform((v) => v === 'true'),
+  /** Public demo: shows household OTPs on screen (no SMS provider yet). Admin OTPs are never shown. */
+  DEMO_MODE: z
+    .string()
+    .default('false')
+    .transform((v) => v === 'true'),
+  /** Insert demo workers on startup when the workers table is empty. */
+  SEED_DEMO_DATA: z
+    .string()
+    .default('false')
+    .transform((v) => v === 'true'),
   BOOKING_FEE_RUPEES: z.coerce.number().int().min(0).default(49),
 });
 

@@ -1,7 +1,7 @@
 {
   "name": "seva",
   "private": true,
-  "description": "Seva — a trusted marketplace connecting households with verified domestic workers",
+  "description": "Seva \u2014 a trusted marketplace connecting households with verified domestic workers",
   "workspaces": [
     "apps/api",
     "apps/web"
@@ -15,9 +15,10 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "db:up": "docker compose up -d db",
     "db:migrate": "npm run db:migrate -w apps/api",
-    "db:seed": "npm run db:seed -w apps/api"
+    "db:seed": "npm run db:seed -w apps/api",
+    "start": "npm start -w apps/api"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }
