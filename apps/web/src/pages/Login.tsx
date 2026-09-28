@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import type { User } from '../lib/types';
@@ -8,7 +8,6 @@ import { ErrorNote } from '../components/ui';
 
 export function LoginPage() {
   const { user, login } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
 
@@ -23,13 +22,11 @@ export function LoginPage() {
 
   const verify = useMutation({
     mutationFn: () => api<{ token: string; user: User }>('/auth/otp/verify', { body: { phone, code } }),
-    onSuccess: ({ token, user }) => {
-      login(token, user);
-      navigate(from ?? (user.role === 'ADMIN' ? '/admin' : '/workers'), { replace: true });
-    },
+    // Setting the user re-renders this page, and the <Navigate> below sends them back to where they came from.
+    onSuccess: ({ token, user }) => login(token, user),
   });
 
-  if (user) return <Navigate to={user.role === 'ADMIN' ? '/admin' : '/workers'} replace />;
+  if (user) return <Navigate to={from ?? (user.role === 'ADMIN' ? '/admin' : '/workers')} replace />;
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();

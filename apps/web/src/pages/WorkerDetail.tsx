@@ -109,10 +109,6 @@ function BookingForm({ worker }: { worker: Worker }) {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      navigate('/login', { state: { from: `/workers/${worker.id}` } });
-      return;
-    }
     book.mutate();
   };
 
@@ -233,9 +229,14 @@ function BookingForm({ worker }: { worker: Worker }) {
 
       {user?.role === 'ADMIN' ? (
         <p className="text-sm text-stone-500">You're logged in as Seva staff. Log in as a household to book.</p>
+      ) : !user ? (
+        // Plain button (not submit) so the browser doesn't demand the address before login.
+        <button type="button" className="btn-primary py-2.5" onClick={() => navigate('/login', { state: { from: `/workers/${worker.id}` } })}>
+          Log in to book
+        </button>
       ) : (
         <button type="submit" className="btn-primary py-2.5" disabled={book.isPending || clash || hours < 1}>
-          {!user ? 'Log in to book' : book.isPending ? 'Sending request…' : 'Request booking'}
+          {book.isPending ? 'Sending request…' : 'Request booking'}
         </button>
       )}
     </form>

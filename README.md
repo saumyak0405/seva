@@ -2,9 +2,32 @@
 
 **Trusted home help, booked in minutes.** Seva connects households with ID-verified domestic workers (cleaning, cooking, babysitting, elder care, laundry and gardening), starting in Agra.
 
+![CI](https://github.com/saumyak0405/seva/actions/workflows/ci.yml/badge.svg)
+
+**Live demo:** https://seva-e20e.onrender.com. Log in with any mobile number; the OTP is shown on screen. It's on a free server, so the first load can take about 50 seconds while it wakes up.
+
+![Booking a cook on Seva](docs/demo.gif)
+
 Households can book a **one-time visit** or a **monthly hire** (a fixed daily time slot). The Seva team confirms every booking by phone with the worker. Workers are onboarded in person by an admin, because many don't use smartphone apps.
 
-![CI](https://github.com/saumyak0405/seva/actions/workflows/ci.yml/badge.svg)
+## Highlights
+
+- **No double-bookings, even under load.** A row lock serializes bookings per worker, and a Postgres `EXCLUDE` constraint backs it up. In the load test below, 1,000 conflicting booking requests (50 at a time) produced **0 double bookings**.
+- **Security built in:**
+  - OTPs are hashed with HMAC, single-use and rate-limited.
+  - Worker ID numbers are encrypted with AES-256-GCM.
+  - JWTs carry role-based access.
+  - Zod validates every input.
+- **Tested:** 52 unit and integration tests run against a real Postgres database in GitHub Actions on every push.
+- **Deployed** as a single service on Render, with Neon serverless Postgres. Migrations run automatically on startup.
+
+## Screenshots
+
+| Find verified workers | Clash detection while booking |
+|---|---|
+| ![Workers](docs/screenshots/workers.png) | ![Booking clash](docs/screenshots/booking-clash.png) |
+| **Admin: confirm requests** | **Booking with audit trail** |
+| ![Admin dashboard](docs/screenshots/admin-dashboard.png) | ![Booking detail](docs/screenshots/booking-detail.png) |
 
 ## Features
 
@@ -25,7 +48,7 @@ Households can book a **one-time visit** or a **monthly hire** (a fixed daily ti
 | Database | PostgreSQL 16, Drizzle ORM, SQL migrations |
 | Auth | Phone OTP → JWT (HS256), role-based access (household / admin) |
 | Testing | Vitest + Supertest integration tests against a real Postgres |
-| DevOps | Docker Compose, GitHub Actions CI |
+| DevOps | Docker Compose, GitHub Actions CI, Render + Neon (deployed) |
 
 ## Architecture
 
@@ -89,6 +112,21 @@ CONFIRMED → CANCELLED              (household before start, or admin)
 
 Every transition writes a `booking_events` row inside the same transaction.
 
+## Load test
+
+`apps/api/scripts/loadtest.ts` runs two scenarios against a running server and then checks the database directly for overlapping bookings.
+
+```bash
+BASE_URL=http://localhost:4000 npm run loadtest -w apps/api   # use a throwaway database
+```
+
+Results on a 2-vCPU machine, with one Node process and Postgres 16 on the same machine (the load generator ran there too):
+
+| Scenario | Result |
+|---|---|
+| **Reads**: `GET /api/workers`, 50 concurrent clients for 15 s | ~950 req/s · p50 47 ms · p95 89 ms · p99 129 ms · 0 errors |
+| **Booking storm**: 1,000 booking requests for random overlapping 2-hour slots across 8 workers, 50 at a time | ~460 req/s · p50 97 ms · p95 183 ms · 150 created, 850 rejected with `409 SLOT_TAKEN` · **0 double bookings in the database** |
+
 ## Running locally
 
 Prerequisites: Node 20+, Docker (or a local Postgres 16).
@@ -145,6 +183,6 @@ The app runs as a **single Render web service**: Express serves the API under `/
 - [ ] WhatsApp/SMS notifications (swap the `Notifier` implementation)
 - [ ] Real-time booking status with Socket.io
 - [x] Deploy (Render + Neon)
-- [ ] Load test booking endpoint with k6
+- [x] Load test the booking endpoint (see above)
 - [ ] Hindi UI
 - [ ] Worker ratings after completed bookings

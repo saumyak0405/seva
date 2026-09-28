@@ -12,7 +12,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file=.env db/migrate.ts",
     "db:seed": "tsx --env-file=.env db/seed.ts",
-    "start:local": "node --env-file=.env dist/index.js"
+    "start:local": "node --env-file=.env dist/index.js",
+    "loadtest": "tsx --env-file=.env scripts/loadtest.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",
